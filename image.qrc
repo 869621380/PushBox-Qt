@@ -8,5 +8,6 @@
         <file>image/wall.png</file>
         <file>image/kun.png</file>
         <file>image/ball.png</file>
+        <file>image/loginground .png</file>
     </qresource>
 </RCC>

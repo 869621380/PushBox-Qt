@@ -1,31 +1,38 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include"QPainter"
-#include"button.h"
-#include <QPushButton>
-#include<QKeyEvent>
-#include<QDebug>
-#include<QMessageBox>
-#define MAX_LEVEL 3
-#define MIN_LEVEL 1
-MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow){
+
+MainWindow::MainWindow(QWidget *parent,QString id): QMainWindow(parent), ui(new Ui::MainWindow){
+    currentMax=db.selecting(id);
+    this->id=id;
+    //打开当前窗口时禁止对其他窗口进行操作
+    setWindowModality((Qt::ApplicationModal));
     ui->setupUi(this);
     //设置固定窗口
     setFixedSize(1000,800);
-    setWindowTitle("厉不厉害你鸡哥");
+    setWindowTitle("推箱子");
     setWindowIcon(QIcon(":/image/kun.png"));
-    //初始化资源
     initialize(1);
     button();
     checkWin();
     winMessage();
 }
+
+MainWindow::~MainWindow(){
+    delete ui;
+}
+
+//资源初始化
 void MainWindow::initialize(int theLevel){
     result=false;
     moveTimes=0;
     level=theLevel;
-    currentMax=theLevel>currentMax?theLevel:currentMax;
-    while(!opData.empty())opData.pop();
+    if(theLevel>currentMax){
+        currentMax=theLevel;
+        db.updateLevel(id,currentMax);
+    }
+    //每次关卡开始前清空栈内的移动数据
+    while(!operationData.empty())operationData.pop();
+    //获取地图数据
     for(int i=0;i<16;i++){
         for(int j=0;j<16;j++){
              initialData[i][j] = config.theData[theLevel][j][i];
@@ -33,9 +40,8 @@ void MainWindow::initialize(int theLevel){
         }
     }
 }
-MainWindow::~MainWindow(){
-    delete ui;
-}
+
+//图片资源渲染
 void MainWindow::paintEvent(QPaintEvent *){
     QPainter painter(this);
     QPixmap pix;
@@ -43,7 +49,7 @@ void MainWindow::paintEvent(QPaintEvent *){
     // 画背景图
     painter.drawPixmap(0, 0, pix);
     int d = 50;
-    //游戏内各类型图标
+    //游戏内各类型图标渲染
     QString str;
     for(int i=0;i<16;i++){
         for(int j=0;j<16;j++){
@@ -82,94 +88,31 @@ void MainWindow::paintEvent(QPaintEvent *){
     QString moveMsg = QString("移动次数： %1").arg(moveTimes);
     painter.drawText(QRect(35,70,105,35),moveMsg);
 }
-void MainWindow::button(){
-    //上一关卡
-    QPushButton * lastBtn = new QPushButton("上一关卡");
-    lastBtn->setParent(this);
-    lastBtn->resize(120,80);
-    lastBtn->setStyleSheet("background-color:gray");
-    lastBtn->setFont(QFont("仿宋", 14));
-    lastBtn->move(850, 140);
-    //监听点击信号
-    connect(lastBtn, &QPushButton::clicked,[=](){
-        //存在上一关卡才能点击
-        if(level != MIN_LEVEL){
-            initialize(level-1);
-            update();
-        }
-    });
-    //下一关卡
-    QPushButton * nextBtn = new QPushButton("下一关卡");
-    nextBtn->setParent(this);
-    nextBtn->resize(120,80);
-    nextBtn->setStyleSheet("background-color:gray");
-    nextBtn->setFont(QFont("仿宋", 14));
-    nextBtn->move(850, 280);
-    //监听点击信号
-    connect(nextBtn, &QPushButton::clicked,[=](){
-        //只有在下一关卡已解锁的情况下才能使用
-        if(level <currentMax){
-            initialize(level+1);
-            update();
-        }
-    });
-    //重玩关卡
-    QPushButton * restartBtn = new QPushButton("重玩关卡");
-    restartBtn->setParent(this);
-    restartBtn->resize(120,80);
-    restartBtn->setStyleSheet("background-color:gray");
-    restartBtn->setFont(QFont("仿宋", 14));
-    restartBtn->move(850, 420);
-    connect(restartBtn, &QPushButton::clicked,[=](){
-        initialize(level);
-        update();
-    });
-    //上一步
-    QPushButton * lastOpBtn = new QPushButton("回退一步");
-    lastOpBtn->setParent(this);
-    lastOpBtn->resize(120,80);
-    lastOpBtn->setStyleSheet("background-color:gray");
-    lastOpBtn->setFont(QFont("仿宋", 14));
-    lastOpBtn->move(850, 560);
-    connect(lastOpBtn, &QPushButton::clicked,[=](){
-       if(!opData.empty()){
-       QPair<int,QVector<int>>p=opData.top();
-       opData.pop();
-       moveTimes--;
-       if(p.first/100==1){
-           int x=p.first%100;
-           for(int i=0;i<16;i++){
-               currentData[x][i]=p.second[i];
-           }
-       }
-       else{
-           int y=p.first%100;
-           for(int i=0;i<16;i++){
-               currentData[i][y]=p.second[i];
-                qDebug()<<i<<" "<<y<<endl;
-           }
-       }}
-        update();
-    });
-}
+
+//键盘案件响应
 void MainWindow::keyReleaseEvent(QKeyEvent*event){
     //点击向上
     if(event->key() == Qt::Key_Up) {
         if(person_y!=0){
           int num=person_y-1;
+
+          //找到第一个不是箱子的物体
           while(num>0&&currentData[person_x][num]==3){
               num--;
           }
+
+          //只有能推得动箱子或者能移动才会运行
           if(!currentData[person_x][num] or currentData[person_x][num]==2){
               //在移动前对数据进行存储以方便回退
               QVector<int>t;
               for(int i=0;i<16;i++)t.push_back(currentData[person_x][i]);
               int tnum=100+person_x;//tnum蕴含了本次操作在哪一行，是行操作还是列操作
-              opData.push_back(QPair<int, QVector<int>>(tnum, t));
+              operationData.push_back(QPair<int, QVector<int>>(tnum, t));//将每次操作数据进行记录
           for(int i=num;i<person_y;i++){
               currentData[person_x][i]=currentData[person_x][i+1];
           }
           currentData[person_x][person_y]=0;
+          //如果物品或人物所在的地方本来是目的地，将目的地重新渲染出来
           for(int i=num;i<=person_y;i++){
               if(currentData[person_x][i]==0&&initialData[person_x][i]==2)
                   currentData[person_x][i]=2;
@@ -180,6 +123,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           update();
     }
   }
+    //以下操作与向上移动的原理相似
     //点击向下
     if(event->key() == Qt::Key_Down) {
         if(person_y!=16){
@@ -193,25 +137,21 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           QVector<int>t;
           for(int i=0;i<16;i++)t.push_back(currentData[person_x][i]);
           int tnum=100+person_x;//tnum蕴含了本次操作在哪一行，是行操作还是列操作
-          opData.push_back(QPair<int, QVector<int>>(tnum, t));
+          operationData.push_back(QPair<int, QVector<int>>(tnum, t));
           //移动从num位置到person_y位置的方块
           for(int i=num;i>person_y;i--){
               currentData[person_x][i]=currentData[person_x][i-1];
           }
           currentData[person_x][person_y]=0;
-          //如果当前位置本来是目的地但是现在成为地板了，这时候重新修改为目的地
           for(int i=num;i>=person_y;i--){
               if(currentData[person_x][i]==0&&initialData[person_x][i]==2)
                   currentData[person_x][i]=2;
           }
-          //增加y轴坐标与增加移动次数
           person_y++;
           moveTimes++;
-
       }
           update();
     }
-
   }
     //点击向左
     if(event->key() == Qt::Key_Left) {
@@ -224,7 +164,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           QVector<int>t;
            for(int i=0;i<16;i++)t.push_back(currentData[i][person_y]);
           int tnum=200+person_y;
-          opData.push_back(QPair<int, QVector<int>>(tnum, t));
+          operationData.push_back(QPair<int, QVector<int>>(tnum, t));
           for(int i=num;i<person_x;i++){
               currentData[i][person_y]=currentData[i+1][person_y];
           }
@@ -250,7 +190,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
               QVector<int>t;
               for(int i=0;i<16;i++)t.push_back(currentData[i][person_y]);
               int tnum=200+person_y;
-              opData.push_back(QPair<int, QVector<int>>(tnum, t));
+              operationData.push_back(QPair<int, QVector<int>>(tnum, t));
           for(int i=num;i>person_x;i--){
               currentData[i][person_y]=currentData[i-1][person_y];
           }
@@ -265,8 +205,101 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           update();
     }
   }
+    //每次移动过后检查游戏是否胜利
     checkWin();
 }
+
+//侧边按钮
+void MainWindow::button(){
+    //上一关卡按钮
+    QPushButton * lastBtn = new QPushButton("上一关卡");
+    lastBtn->setParent(this);
+    lastBtn->resize(120,80);
+    lastBtn->setStyleSheet("background-color:gray");
+    lastBtn->setFont(QFont("仿宋", 14));
+    lastBtn->move(850, 100);
+
+    connect(lastBtn, &QPushButton::clicked,[=](){
+        //存在上一关卡才能点击
+        if(level != MIN_LEVEL){
+            initialize(level-1);
+            update();
+        }
+    });
+
+    //下一关卡按钮
+    QPushButton * nextBtn = new QPushButton("下一关卡");
+    nextBtn->setParent(this);
+    nextBtn->resize(120,80);
+    nextBtn->setStyleSheet("background-color:gray");
+    nextBtn->setFont(QFont("仿宋", 14));
+    nextBtn->move(850, 240);
+
+    connect(nextBtn, &QPushButton::clicked,[=](){
+        //只有在下一关卡已解锁的情况下才能使用
+        if(level <currentMax){
+            initialize(level+1);
+            update();
+        }
+    });
+
+    //重玩关卡按钮
+    QPushButton * restartBtn = new QPushButton("重玩关卡");
+    restartBtn->setParent(this);
+    restartBtn->resize(120,80);
+    restartBtn->setStyleSheet("background-color:gray");
+    restartBtn->setFont(QFont("仿宋", 14));
+    restartBtn->move(850, 380);
+
+    connect(restartBtn, &QPushButton::clicked,[=](){
+        initialize(level);
+        update();
+    });
+
+    //回退一步按钮
+    QPushButton * lastOpBtn = new QPushButton("回退一步");
+    lastOpBtn->setParent(this);
+    lastOpBtn->resize(120,80);
+    lastOpBtn->setStyleSheet("background-color:gray");
+    lastOpBtn->setFont(QFont("仿宋", 14));
+    lastOpBtn->move(850, 520);
+
+    connect(lastOpBtn, &QPushButton::clicked,[=](){
+       if(!operationData.empty()){
+       QPair<int,QVector<int>>p=operationData.top();
+       operationData.pop();
+       moveTimes--;
+       if(p.first/100==1){
+           int x=p.first%100;
+           for(int i=0;i<16;i++){
+               currentData[x][i]=p.second[i];
+           }
+       }
+       else{
+           int y=p.first%100;
+           for(int i=0;i<16;i++){
+               currentData[i][y]=p.second[i];
+           }
+       }}
+        update();
+    });
+
+    //返回主菜单
+    QPushButton * backBtn = new QPushButton("返回主菜单");
+    backBtn->setParent(this);
+    backBtn->resize(120,80);
+    backBtn->setStyleSheet("background-color:gray");
+    backBtn->setFont(QFont("仿宋", 14));
+    backBtn->move(850, 660);
+
+    connect(backBtn, &QPushButton::clicked,[=](){
+        QWidget *parent = this->parentWidget();
+           parent->show();// 显示父窗口
+           this->close();
+    });
+}
+
+//检查游戏胜利
 void MainWindow::checkWin(){
     result=1;
     for(int i=0;i<16;i++){
@@ -279,9 +312,11 @@ void MainWindow::checkWin(){
     if(result&&level!=MAX_LEVEL){
         level++;
         initialize(level);
-        update();
     }
+     update();
 }
+
+//胜利消息弹窗
 void MainWindow::winMessage(){
         if (result) {
             QMessageBox msgBox;

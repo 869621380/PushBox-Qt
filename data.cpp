@@ -1,8 +1,9 @@
 #include "data.h"
 
-data::data(QObject *parent)
-{
+data::data(QObject *parent){
+
     Q_UNUSED(parent);
+
     //关卡1
     int checkpoint1[16][16] = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -22,6 +23,7 @@ data::data(QObject *parent)
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
     insert(1,checkpoint1);
+
     //关卡2
     int checkpoint2[16][16] = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -41,7 +43,8 @@ data::data(QObject *parent)
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
     insert(2,checkpoint2);
-    //第三关
+
+    //关卡3
     int checkpoint3[16][16] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -60,14 +63,16 @@ data::data(QObject *parent)
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
     insert(3,checkpoint3);
+
 }
+
+//地图数据插入
 void data::insert(int index,int checkpoint[16][16]){
     QVector<QVector<int>> v;
     for(int i = 0 ; i < 16 ; i++){
         QVector<int> t;
-        for(int j = 0 ; j < 16 ; j++){
+        for(int j = 0 ; j < 16 ; j++)
             t.push_back(checkpoint[i][j]);
-        }
         v.push_back(t);
     }
     theData.insert(index,v);
