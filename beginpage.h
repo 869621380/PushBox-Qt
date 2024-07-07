@@ -26,9 +26,11 @@ private:
     void basicButton();//经典模式按钮
     void loginButton();//账号登录按钮
     void logOutButton();//退出登录按钮
+    void rankListButton();//排行榜按钮
     QPushButton*loginBtn;//点击登录按钮
     QPushButton*basicBtn;//开始游戏按钮
-    QPushButton *logOutBtn;//登出按钮
+    QPushButton*logOutBtn;//登出按钮
+    QPushButton*rankListBtn;//排行榜按钮
     class::loginPage*login;//登录界面
     class::DataBase db;//数据库
     MainWindow*m;//游戏页面

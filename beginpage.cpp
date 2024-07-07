@@ -10,11 +10,16 @@ beginPage::beginPage(QWidget *parent){
     button();
 }
 
+beginPage::~beginPage(){
+    delete login;
+}
+
 //按钮
 void beginPage::button(){
     loginButton();
     logOutButton();
     basicButton();
+    rankListButton();
 }
 
 //背景图片渲染
@@ -83,5 +88,16 @@ void beginPage::logOutButton(){
     });
 }
 
-beginPage::~beginPage(){
+//排行榜按钮
+void beginPage::rankListButton(){
+    rankListBtn = new QPushButton("排行榜");
+    rankListBtn->setParent(this);
+    rankListBtn->resize(500,80);
+    rankListBtn->setStyleSheet("background-color:gray");
+    rankListBtn->setFont(QFont("仿宋", 14));
+    rankListBtn->move(250, 500);
+    connect(rankListBtn, &QPushButton::clicked,[=](){
+
+    });
 }
+

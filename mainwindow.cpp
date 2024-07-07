@@ -26,6 +26,7 @@ void MainWindow::initialize(int theLevel){
     result=false;
     moveTimes=0;
     level=theLevel;
+    updateRank=0;
     if(theLevel>currentMax){
         currentMax=theLevel;
         db.updateLevel(id,currentMax);
@@ -308,10 +309,36 @@ void MainWindow::checkWin(){
                 result=0;
         }
     }
-    winMessage();
-    if(result&&level!=MAX_LEVEL){
-        level++;
-        initialize(level);
+    //获胜后检测是否能进入排行榜
+    if(result){
+        int rankListNum=db.getTotalCount(level);
+        if(rankListNum<10){
+            db.inserting(id,level,moveTimes);
+            db.sortRecords(level);
+            updateRank=1;
+        }
+        else if(rankListNum==10){
+            int maxStepInRank=db.getLastStep(level);
+            if(moveTimes<maxStepInRank){
+                //如果该账号已经在排行榜中，检测是否需要更新
+                if(db.judgeInRankList(id,level)){
+                    db.inserting(id,level,moveTimes);
+                }
+                //否则删除排名最低的并添加当前用户进入排行榜
+                else{
+                    db.deleteLastRecord(level);
+                    db.inserting(id,level,moveTimes);
+                    updateRank=1;
+                }
+                //排行榜重新排序
+                db.sortRecords(level);
+            }
+        }
+        winMessage();
+        if(level!=MAX_LEVEL){
+            level++;
+            initialize(level);
+        }
     }
      update();
 }
@@ -324,10 +351,11 @@ void MainWindow::winMessage(){
                                  "min-width:300px;"
                                  "min-height:150px;"
                                  "}");
-            QString mes="恭喜通过第"+ QString::number(level) + "关\n共用："+QString::number(moveTimes)+"步";
-            if(level==MAX_LEVEL)mes+="\n恭喜你已通过全部关卡";
+            QString msg="恭喜通过第"+ QString::number(level) + "关\n共用："+QString::number(moveTimes)+"步";
+            if(updateRank)msg+="\n恭喜您进入第 "+QString::number(level)+" 关排行榜前十";
+            if(level==MAX_LEVEL)msg+="\n恭喜你已通过全部关卡";
             msgBox.setWindowTitle("message");
-            msgBox.setText(mes);
+            msgBox.setText(msg);
             msgBox.setWindowIcon(QIcon(":/image/kun.png"));
             msgBox.exec();
         }

@@ -40,6 +40,7 @@ private:
     int currentMax;//当前已解锁的最高关卡
     class data config;//地图初始资源
     bool result;//是否达成胜利条件
+    bool updateRank;
     int person_x;//人物x坐标
     int person_y;//人物y坐标
     int moveTimes;//移动次数
