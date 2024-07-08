@@ -5,7 +5,7 @@
 #include"mainwindow.h"
 #include"loginpage.h"
 #include"Database.h"
-
+#include"ranklistpage.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class beginPage; }
 QT_END_NAMESPACE
@@ -32,6 +32,7 @@ private:
     QPushButton*logOutBtn;//登出按钮
     QPushButton*rankListBtn;//排行榜按钮
     class::loginPage*login;//登录界面
+    class::rankListPage*ranklist;//排行榜界面
     class::DataBase db;//数据库
     MainWindow*m;//游戏页面
 };

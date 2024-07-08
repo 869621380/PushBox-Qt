@@ -21,14 +21,16 @@ SOURCES += \
     data.cpp \
     loginpage.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    ranklistpage.cpp
 
 HEADERS += \
     Database.h \
     beginpage.h \
     data.h \
     loginpage.h \
-    mainwindow.h
+    mainwindow.h \
+    ranklistpage.h
 
 FORMS += \
     mainwindow.ui

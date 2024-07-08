@@ -165,7 +165,7 @@ bool DataBase::updateLevel(QString id, int newLevel) {
 //获取当前关卡所用步数最多的用户的步数
 int DataBase::getLastStep(int level) {
     QSqlQuery query(db);
-    query.prepare("SELECT step FROM leaderboard WHERE level = :level ORDER BY id DESC LIMIT 1");
+    query.prepare("SELECT step FROM leaderboard WHERE level = :level ORDER BY rowid DESC LIMIT 1");
     query.bindValue(":level", level);
     if (query.exec() && query.next()) {
         int lastStep = query.value(0).toInt();
@@ -179,21 +179,21 @@ int DataBase::getLastStep(int level) {
 //删除当前关卡当前关卡所用步数最多的用户的步数
 bool DataBase::deleteLastRecord(int level) {
     QSqlQuery querySelect(db);
-    querySelect.prepare("SELECT id FROM leaderboard WHERE level = :level ORDER BY id DESC LIMIT 1");
+    querySelect.prepare("SELECT rowid FROM leaderboard WHERE level = :level ORDER BY rowid DESC LIMIT 1");
     querySelect.bindValue(":level", level);
     if (!querySelect.exec() || !querySelect.next()) {
         qDebug() << "Select query failed:" << querySelect.lastError().text();
         return false;
     }
-    int idToDelete = querySelect.value(0).toInt();
+    qint64 idToDelete = querySelect.value(0).toLongLong();
     QSqlQuery queryDelete(db);
-    queryDelete.prepare("DELETE FROM leaderboard WHERE id = :id");
+    queryDelete.prepare("DELETE FROM leaderboard WHERE rowid = :id");
     queryDelete.bindValue(":id", idToDelete);
     if (!queryDelete.exec()) {
         qDebug() << "Delete query failed:" << queryDelete.lastError().text();
         return false;
     }
-    return true;  // 删除成功
+    return true;
 }
 
 //查询当前关卡进入排行榜的总人数
@@ -212,6 +212,7 @@ int DataBase::getTotalCount(int level) {
     }
 }
 
+//对相同关卡的人根据步数多少进行升序稳定排序
 void DataBase::sortRecords(int level) {
     QSqlDatabase db = QSqlDatabase::database();
     db.transaction();
@@ -308,4 +309,58 @@ bool DataBase::judgeInRankList(QString id,int level){
     else return false;
 }
 
+//对当前关卡排行榜上所有账号名称进行查询
+QVector<QString> DataBase::findUserId(int level) {
+    QVector<QString> ids;
+
+    QSqlQuery query;
+
+    // 查询语句，根据给定的 level 查询 id
+    QString sqlQuery = "SELECT id FROM leaderboard WHERE level = :level";
+    query.prepare(sqlQuery);
+
+    // 绑定参数
+    query.bindValue(":level", level);
+
+    // 执行查询
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        return ids; // 返回空的 QVector
+    }
+
+    // 处理查询结果
+    while (query.next()) {
+        QString id = query.value(0).toString(); // 第一列是 id
+        ids.append(id); // 将 id 添加到 QVector 中
+    }
+
+    return ids;
+}
+
+QVector<int> DataBase::findUserStep(int level) {
+    QVector<int> steps;
+
+    QSqlQuery query;
+
+    // 查询语句，根据给定的 level 查询 step
+    QString sqlQuery = "SELECT step FROM leaderboard WHERE level = :level";
+    query.prepare(sqlQuery);
+
+    // 绑定参数
+    query.bindValue(":level", level);
+
+    // 执行查询
+    if (!query.exec()) {
+        qDebug() << "Error executing query:" << query.lastError().text();
+        return steps; // 返回空的 QVector
+    }
+
+    // 处理查询结果
+    while (query.next()) {
+        int step = query.value(0).toInt(); // 第一列是整数类型的 step
+        steps.append(step); // 将 step 添加到 QVector 中
+    }
+
+    return steps;
+}
 

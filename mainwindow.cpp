@@ -21,6 +21,7 @@ MainWindow::~MainWindow(){
     delete ui;
 }
 
+
 //资源初始化
 void MainWindow::initialize(int theLevel){
     result=false;
@@ -319,6 +320,7 @@ void MainWindow::checkWin(){
         }
         else if(rankListNum==10){
             int maxStepInRank=db.getLastStep(level);
+            qDebug()<<maxStepInRank;
             if(moveTimes<maxStepInRank){
                 //如果该账号已经在排行榜中，检测是否需要更新
                 if(db.judgeInRankList(id,level)){

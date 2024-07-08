@@ -14,7 +14,7 @@ loginPage::loginPage(QWidget *parent){
     QHBoxLayout*idLayout=new QHBoxLayout;
     QLabel *idLabel = new QLabel("登录/注册: ");
     idLayout->addWidget(idLabel);
-    idLineEdit=new QLineEdit;
+    idLineEdit=new QLineEdit(this);
     idLayout->addWidget(idLineEdit);
     mainLayout->addLayout(idLayout);
     //密码栏
@@ -27,11 +27,11 @@ loginPage::loginPage(QWidget *parent){
     mainLayout->addLayout(passwordLayout);
     //登录/注册按钮
     QHBoxLayout*buttonLayout=new QHBoxLayout;
-    QPushButton*loginBtn=new QPushButton;
+    QPushButton*loginBtn=new QPushButton(this);
     loginBtn->setParent(this);
     loginBtn->setText("登录");
     buttonLayout->addWidget(loginBtn);
-    QPushButton*registerBtn=new QPushButton;
+    QPushButton*registerBtn=new QPushButton(this);
     registerBtn->setParent(this);
     registerBtn->setText("注册");
     buttonLayout->addWidget(registerBtn);
@@ -58,7 +58,7 @@ void loginPage::inspect(){
         msg->setText("账号或密码错误");
         msg->move(60,160);
         msg->show();
-        QTimer::singleShot(3000, msg, &QWidget::deleteLater);
+        QTimer::singleShot(1000, msg, &QWidget::deleteLater);
     }
    }
    if(hasLogged()){
@@ -82,7 +82,7 @@ void loginPage::registerAccount(){
         msg->setText("注册成功");
         msg->move(60,160);
         msg->show();
-        QTimer::singleShot(3000, msg, &QWidget::deleteLater);
+        QTimer::singleShot(1000, msg, &QWidget::deleteLater);
     }
     else{
         QLabel*msg=new QLabel(this);
@@ -93,7 +93,7 @@ void loginPage::registerAccount(){
         msg->setText("账号已存在");
         msg->move(60,160);
         msg->show();
-        QTimer::singleShot(3000, msg, &QWidget::deleteLater);
+        QTimer::singleShot(1000, msg, &QWidget::deleteLater);
     }
    }
 }

@@ -19,6 +19,9 @@ public:
     void sortRecords(int level);//对相同关卡的人根据步数多少进行升序稳定排序
     bool inserting(QString id,int level,int step);//插入新的排行榜数据或更新原在榜人的数据
     bool judgeInRankList(QString id,int level);//判断此账户在此关卡是否在榜；
+    QVector<QString> findUserId(int level);//对当前关卡排行榜上所有账号名称进行查询
+    QVector<int> findUserStep(int level);//对当前关卡排行榜上所有账号最小步数进行查询
+
 private:
     QSqlDatabase db;
 };
