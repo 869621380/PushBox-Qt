@@ -16,5 +16,10 @@
         <file>music/background.mp3</file>
         <file>music/move.mp3</file>
         <file>image/logo.ico</file>
+        <file>image/res1.png</file>
+        <file>image/res2.png</file>
+        <file>image/res3.png</file>
+        <file>image/res4.png</file>
+        <file>image/res5.png</file>
     </qresource>
 </RCC>

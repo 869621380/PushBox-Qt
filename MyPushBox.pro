@@ -43,8 +43,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
+    README.md \
     image/1.jpg \
-    image/blackground.png \
     logo.ico \
     music/background.wav
 
