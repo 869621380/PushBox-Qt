@@ -3,6 +3,8 @@
 
 MainWindow::MainWindow(QWidget *parent,QString id): QMainWindow(parent), ui(new Ui::MainWindow){
     currentMax=db.selecting(id);
+    config=new class data(this);
+    isFreeModel=0;
     this->id=id;
     //打开当前窗口时禁止对其他窗口进行操作
     setWindowModality((Qt::ApplicationModal));
@@ -10,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent,QString id): QMainWindow(parent), ui(new 
     //设置固定窗口
     setFixedSize(1000,800);
     setWindowTitle("推箱子");
-    setWindowIcon(QIcon(":/image/kun.png"));
+    setWindowIcon(QIcon(":/image/man.png"));
     initialize(1);
     button();
     checkWin();
@@ -21,6 +23,25 @@ MainWindow::~MainWindow(){
     delete ui;
 }
 
+//自主设计模式
+MainWindow::MainWindow(QWidget *parent,int theData[16][16]){
+    Q_UNUSED(parent);
+    isFreeModel=1;
+    result=false;
+    moveTimes=0;
+     setWindowModality((Qt::ApplicationModal));
+     setFixedSize(1000,800);
+     setWindowTitle("自创关卡挑战");
+     setWindowIcon(QIcon(":/image/kun.png"));
+    //获取地图数据
+    for(int i=0;i<16;i++){
+        for(int j=0;j<16;j++){
+             currentData[i][j]=theData[i][j];
+             initialData[i][j]=theData[i][j];
+        }
+    }
+    button();
+}
 
 //资源初始化
 void MainWindow::initialize(int theLevel){
@@ -37,8 +58,8 @@ void MainWindow::initialize(int theLevel){
     //获取地图数据
     for(int i=0;i<16;i++){
         for(int j=0;j<16;j++){
-             initialData[i][j] = config.theData[theLevel][j][i];
-             currentData[i][j]=config.theData[theLevel][j][i];
+             currentData[i][j]=config->theData[theLevel][j][i];
+             initialData[i][j]=config->theData[theLevel][j][i];
         }
     }
 }
@@ -47,8 +68,10 @@ void MainWindow::initialize(int theLevel){
 void MainWindow::paintEvent(QPaintEvent *){
     QPainter painter(this);
     QPixmap pix;
-    pix.load(":/image/blackground.png");
     // 画背景图
+    pix.load(":/image/background.png");
+    painter.drawPixmap(0, 0, pix);
+    pix.load(":/image/blackground.png");
     painter.drawPixmap(0, 0, pix);
     int d = 50;
     //游戏内各类型图标渲染
@@ -71,24 +94,44 @@ void MainWindow::paintEvent(QPaintEvent *){
                 painter.drawPixmap(d*i,d*j,pix);
             }
             else if(currentData[i][j]==3){
-                str=":image/ball.png";
+                if(initialData[i][j]==2){
+                    str=":image/des.png";
+                    pix.load(str);
+                    painter.drawPixmap(d*i,d*j,pix);
+                }
+                str=":image/balls.png";
                 pix.load(str);
                 painter.drawPixmap(d*i,d*j,pix);
             }
             else if(currentData[i][j]==4){
                 person_x=i;
                 person_y=j;
-                str=":image/kun.png";
+                if(initialData[i][j]==2){
+                    str=":image/des.png";
+                    pix.load(str);
+                    painter.drawPixmap(d*i,d*j,pix);
+                }
+                str=":image/man.png";
                 pix.load(str);
                 painter.drawPixmap(d*i,d*j,pix);
             }
         }
+    }      
+    if(!isFreeModel){
+        painter.setPen(Qt::white);
+        QString levelMsg = QString("第 %1 关").arg(level);
+        painter.drawText(QRect(35,35,105,35),levelMsg);
+        QString moveMsg = QString("移动次数：   %1").arg(moveTimes);
+        painter.drawText(QRect(35,70,105,35),moveMsg);
     }
-    painter.setPen(Qt::white);
-    QString levelMsg = QString("第 %1 关").arg(level);
-    painter.drawText(QRect(35,35,105,35),levelMsg);
-    QString moveMsg = QString("移动次数： %1").arg(moveTimes);
-    painter.drawText(QRect(35,70,105,35),moveMsg);
+   else{
+        QFont font("仿宋", 20);
+        painter.setFont(font);
+        QString msg = QString("移动次数:");
+        painter.drawText(QRect(820,70,200,100),msg);
+        QString moveMsg = QString("%1").arg(moveTimes);
+        painter.drawText(QRect(888,125,200,100),moveMsg);
+    }
 }
 
 //键盘案件响应
@@ -121,6 +164,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           }
           moveTimes++;
           person_y--;
+          player = new QMediaPlayer(this);
+          player->setMedia(QUrl("qrc:/music/move.mp3"));
+          player->play();
       }
           update();
     }
@@ -151,6 +197,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           }
           person_y++;
           moveTimes++;
+          player = new QMediaPlayer(this);
+          player->setMedia(QUrl("qrc:/music/move.mp3"));
+          player->play();
       }
           update();
     }
@@ -177,6 +226,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           }
           moveTimes++;
           person_x--;
+          player = new QMediaPlayer(this);
+          player->setMedia(QUrl("qrc:/music/move.mp3"));
+          player->play();
       }
           update();
     }
@@ -203,6 +255,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
           }
           moveTimes++;
           person_x++;
+          player = new QMediaPlayer(this);
+          player->setMedia(QUrl("qrc:/music/move.mp3"));
+          player->play();
       }
           update();
     }
@@ -213,6 +268,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent*event){
 
 //侧边按钮
 void MainWindow::button(){
+    if(!isFreeModel){
     //上一关卡按钮
     QPushButton * lastBtn = new QPushButton("上一关卡");
     lastBtn->setParent(this);
@@ -243,8 +299,23 @@ void MainWindow::button(){
             initialize(level+1);
             update();
         }
+        else{
+            QLabel*msg=new QLabel(this);
+            // 设置文本颜色为红色
+            QPalette palette;
+            palette.setColor(QPalette::WindowText, Qt::red);
+            msg->setPalette(palette);
+            msg->resize(300,100);
+            msg->setFont(QFont("仿宋", 14));
+            if(currentMax!=MAX_LEVEL)
+            msg->setText("该关卡还未通关");
+            else msg->setText("已经是最后一关");
+            msg->move(805,170);
+            msg->show();
+            QTimer::singleShot(1000, msg, &QWidget::deleteLater);
+        }
     });
-
+    }
     //重玩关卡按钮
     QPushButton * restartBtn = new QPushButton("重玩关卡");
     restartBtn->setParent(this);
@@ -254,7 +325,15 @@ void MainWindow::button(){
     restartBtn->move(850, 380);
 
     connect(restartBtn, &QPushButton::clicked,[=](){
+        if(!isFreeModel)
         initialize(level);
+        else{
+            while(!operationData.empty())operationData.pop();
+            moveTimes=0;
+            for(int i=0;i<16;i++)
+                for(int j=0;j<16;j++)
+                     currentData[i][j]=initialData[i][j];
+        }
         update();
     });
 
@@ -287,7 +366,7 @@ void MainWindow::button(){
     });
 
     //返回主菜单
-    QPushButton * backBtn = new QPushButton("返回主菜单");
+    QPushButton * backBtn = new QPushButton("返回");
     backBtn->setParent(this);
     backBtn->resize(120,80);
     backBtn->setStyleSheet("background-color:gray");
@@ -295,8 +374,8 @@ void MainWindow::button(){
     backBtn->move(850, 660);
 
     connect(backBtn, &QPushButton::clicked,[=](){
-        QWidget *parent = this->parentWidget();
-           parent->show();// 显示父窗口
+        //QWidget *parent = this->parentWidget();
+           //parent->show();// 显示父窗口
            this->close();
     });
 }
@@ -311,7 +390,7 @@ void MainWindow::checkWin(){
         }
     }
     //获胜后检测是否能进入排行榜
-    if(result){
+    if(!isFreeModel&&result){
         int rankListNum=db.getTotalCount(level);
         if(rankListNum<10){
             db.inserting(id,level,moveTimes);
@@ -342,6 +421,7 @@ void MainWindow::checkWin(){
             initialize(level);
         }
     }
+    else winMessage();
      update();
 }
 
@@ -353,12 +433,19 @@ void MainWindow::winMessage(){
                                  "min-width:300px;"
                                  "min-height:150px;"
                                  "}");
-            QString msg="恭喜通过第"+ QString::number(level) + "关\n共用："+QString::number(moveTimes)+"步";
+            QString msg;
+            if(!isFreeModel){
+            msg="恭喜通过第"+ QString::number(level) + "关\n共用："+QString::number(moveTimes)+"步";
             if(updateRank)msg+="\n恭喜您进入第 "+QString::number(level)+" 关排行榜前十";
             if(level==MAX_LEVEL)msg+="\n恭喜你已通过全部关卡";
+            }
+            else{
+                 msg="恭喜通过您的自创关卡\n共用："+QString::number(moveTimes)+"步\n您可点击重玩关卡重新挑战";
+            }
+
             msgBox.setWindowTitle("message");
             msgBox.setText(msg);
-            msgBox.setWindowIcon(QIcon(":/image/kun.png"));
+            msgBox.setWindowIcon(QIcon(":/image/man.png"));
             msgBox.exec();
         }
 }

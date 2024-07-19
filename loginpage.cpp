@@ -6,7 +6,7 @@ loginPage::loginPage(QWidget *parent){
     //打开当前窗口时禁止对其他窗口进行操作
     setWindowModality((Qt::ApplicationModal));
     setFixedSize(600, 300); // 设置窗口大小为固定的 600x300 像素
-    setWindowIcon(QIcon(":/image/kun.png"));
+    setWindowIcon(QIcon(":/image/man.png"));
     setWindowTitle("账号登录");
     //设置登录页面
     QVBoxLayout *mainLayout = new QVBoxLayout(this);

@@ -7,9 +7,9 @@
 
 class data{
 public:
-    explicit data(QObject *parent = nullptr); //添加基本地图数据
+    data(QObject *parent = nullptr); //添加基本地图数据
+    data(int type=0);//自主设计模式的空白地图
     QMap<int,QVector<QVector<int>>>theData;    //基本地图数据
-
 private:
     void  insert(int index,int checkpoint[16][16]);//地图数据插入
 };

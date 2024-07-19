@@ -172,7 +172,7 @@ int DataBase::getLastStep(int level) {
         return lastStep;
     } else {
         qDebug() << "Query failed:" << query.lastError().text();
-        return -1;  // 返回一个错误标志，或者根据需要返回适当的默认值
+        return -1;
     }
 }
 
@@ -223,10 +223,11 @@ void DataBase::sortRecords(int level) {
     query.bindValue(":level", level);
     query.exec();
 
-    std::vector<std::pair<int, int>> records;
+    std::vector<std::pair<QString, int>> records;
     while (query.next()) {
-        records.emplace_back(query.value("id").toInt(), query.value("step").toInt());
+        records.emplace_back(query.value("id").toString(), query.value("step").toInt());
     }
+
     QSqlQuery deleteQuery;
     deleteQuery.prepare("DELETE FROM leaderboard WHERE level = :level");
     deleteQuery.bindValue(":level", level);
@@ -235,9 +236,11 @@ void DataBase::sortRecords(int level) {
         qCritical() << "Failed to delete leaderboard records: " << deleteQuery.lastError().text();
         return;
     }
-    std::sort(records.begin(), records.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+
+    std::sort(records.begin(), records.end(), [](const std::pair<QString, int>& a, const std::pair<QString, int>& b) {
         return a.second < b.second;
     });
+
     QSqlQuery insertQuery;
     insertQuery.prepare("INSERT INTO leaderboard (id, step, level) VALUES (:id, :step, :level)");
     for (const auto& pair : records) {
@@ -250,14 +253,15 @@ void DataBase::sortRecords(int level) {
             return;
         }
     }
+
     db.commit();
 }
 
 //插入新的排行榜数据或更新原在榜人的数据
-bool DataBase::inserting(QString id, int level, int step) {
+bool DataBase::inserting(QString ids, int level, int step) {
     QSqlQuery checkQuery(db);
     checkQuery.prepare("SELECT step FROM leaderboard WHERE id = :id AND level = :level");
-    checkQuery.bindValue(":id", id);
+    checkQuery.bindValue(":id", ids);
     checkQuery.bindValue(":level", level);
     if (!checkQuery.exec()) {
         qDebug() << "Check query failed:" << checkQuery.lastError().text();
@@ -272,7 +276,7 @@ bool DataBase::inserting(QString id, int level, int step) {
         QSqlQuery updateQuery(db);
         updateQuery.prepare("UPDATE leaderboard SET step = :step WHERE id = :id AND level = :level");
         updateQuery.bindValue(":step", step);
-        updateQuery.bindValue(":id", id);
+        updateQuery.bindValue(":id", ids);
         updateQuery.bindValue(":level", level);
         if (!updateQuery.exec()) {
             qDebug() << "Update failed:" << updateQuery.lastError().text();
@@ -282,12 +286,15 @@ bool DataBase::inserting(QString id, int level, int step) {
     else {
         QSqlQuery insertQuery(db);
         insertQuery.prepare("INSERT INTO leaderboard (id, level, step) VALUES (:id, :level, :step)");
-        insertQuery.bindValue(":id", id);
+        insertQuery.bindValue(":id", ids);
         insertQuery.bindValue(":level", level);
         insertQuery.bindValue(":step", step);
         if (!insertQuery.exec()) {
             qDebug() << "Insert failed:" << insertQuery.lastError().text();
             return false;
+        }
+        else {
+             qDebug() << "Inserted data: id =" << ids << ", level =" << level << ", step =" << step<<"successfully";
         }
     }
     return true;
@@ -327,16 +334,17 @@ QVector<QString> DataBase::findUserId(int level) {
         qDebug() << "Error executing query:" << query.lastError().text();
         return ids; // 返回空的 QVector
     }
-
     // 处理查询结果
     while (query.next()) {
         QString id = query.value(0).toString(); // 第一列是 id
+
         ids.append(id); // 将 id 添加到 QVector 中
     }
 
     return ids;
 }
 
+//对当前关卡排行榜上所有账号最小步数进行查询
 QVector<int> DataBase::findUserStep(int level) {
     QVector<int> steps;
 

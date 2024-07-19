@@ -1,13 +1,20 @@
 <RCC>
     <qresource prefix="/">
         <file>image/blackground.png</file>
-        <file>image/box.png</file>
-        <file>image/des.png</file>
         <file>image/floor.png</file>
-        <file>image/man.png</file>
         <file>image/wall.png</file>
-        <file>image/kun.png</file>
-        <file>image/ball.png</file>
-        <file>image/loginground .png</file>
+        <file>image/whiteground.png</file>
+        <file>image/b1.png</file>
+        <file>image/b2.png</file>
+        <file>image/b3.png</file>
+        <file>image/balls.png</file>
+        <file>image/background2.png</file>
+        <file>image/bg.png</file>
+        <file>image/des.png</file>
+        <file>image/man.png</file>
+        <file>image/background.png</file>
+        <file>music/background.mp3</file>
+        <file>music/move.mp3</file>
+        <file>image/logo.ico</file>
     </qresource>
 </RCC>
